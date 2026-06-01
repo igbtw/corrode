@@ -1,4 +1,13 @@
-**RSfactai is a engine that make the hard work for lazy devs.**
+# RSfactai
 
-RSfactai help developers understand a complex system in hours repartitioning them while Mapping the architecture, Detecting problems
-Automatically, Documenting them, Planned modernizations and also Training developers.
+RSfactai is an engine (build with Rust btw) that helps developers understand complex software systems in a fraction of the time.
+
+It analyzes codebases by:
+
+- Mapping the architecture
+- Detecting issues automatically
+- Generating documentation
+- Planning modernization strategies
+- Assisting in developer onboarding and training
+
+The goal is to reduce the time required to understand large and unfamiliar projects from weeks to hours.
