@@ -1,10 +1,11 @@
 mod cli;
+mod utils;
 
 use std::env;
-use std::fs;
 use std::process;
 
 use crate::cli::Flags;
+use crate::utils::analysis::analyse_file;
 
 fn main() {
     // Collect all command-line arguments into a vector.
@@ -19,15 +20,8 @@ fn main() {
 
     match flags.command.as_str() {
         "analyse" | "a" => {
-            println!("Reading {}:", flags.filename);
-
-            // Read the entire file into memory.
-            // Exit the program if the file cannot be opened or read.
-            let contents = fs::read_to_string(&flags.filename).unwrap_or_else(|err| {
-                eprintln!("Failed to read '{}': {}", flags.filename, err);
-                process::exit(1);
-            });
-            println!("The contents is:\n{}", contents);
+            let contents = analyse_file(&flags.filename);
+            println!("Content:\n{}", contents);
         }
         _ => {
             eprintln!("Unknown command: {}", flags.command);
