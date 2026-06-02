@@ -1,6 +1,10 @@
+mod cli;
+
 use std::env;
 use std::fs;
 use std::process;
+
+use crate::cli::Flags;
 
 fn main() {
     // Collect all command-line arguments into a vector.
@@ -13,37 +17,21 @@ fn main() {
         process::exit(1);
     });
 
-    println!("Reading {}:", flags.filename);
+    match flags.command.as_str() {
+        "analyse" | "a" => {
+            println!("Reading {}:", flags.filename);
 
-    // Read the entire file into memory.
-    // Exit the program if the file cannot be opened or read.
-    let contents = fs::read_to_string(&flags.filename).unwrap_or_else(|err| {
-        eprintln!("Failed to read '{}': {}", flags.filename, err);
-        process::exit(1);
-    });
-
-    println!("The contents is:\n{}", contents);
-}
-
-// Stores the parsed command-line configuration.
-struct Flags {
-    filename: String,
-}
-
-impl Flags {
-    // Convert raw CLI arguments into a Flags instance.
-    // Returns an error when the required file argument is missing.
-    fn new(args: &[String]) -> Result<Flags, &str> {
-        // The first argument is always the program name,
-        // so at least one additional argument is required.
-        if args.len() < 2 {
-            return Err("Not enough arguments/flags.");
+            // Read the entire file into memory.
+            // Exit the program if the file cannot be opened or read.
+            let contents = fs::read_to_string(&flags.filename).unwrap_or_else(|err| {
+                eprintln!("Failed to read '{}': {}", flags.filename, err);
+                process::exit(1);
+            });
+            println!("The contents is:\n{}", contents);
         }
-
-        // Treat the first user-provided argument as the target file.
-        let filename = args[1].clone();
-
-        Ok(Flags { filename })
+        _ => {
+            eprintln!("Unknown command: {}", flags.command);
+            process::exit(1);
+        }
     }
 }
-
