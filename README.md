@@ -1,6 +1,6 @@
 # RSfactai
 
-**RSfactai** is a codebase analysis engine (built with Rust) that helps developers understand complex software systems in a fraction of the time.
+**RSfactai** is a codebase analysis engine (built with Rust btw) that helps developers understand complex software systems in a fraction of the time.
 
 It analyzes codebases by:
 
@@ -13,7 +13,7 @@ The goal is to reduce the time required to understand large and unfamiliar proje
 
 ## Status
 
-This project is in early development. Currently it reads and analyzes individual files. Directory-wide scanning and deep code parsing are coming next.
+⚠️This project is in early development. Currently it reads and analyzes individual files. Directory-wide scanning and deep code parsing are coming next. ⚠️
 
 ## Installation
 
