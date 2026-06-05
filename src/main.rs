@@ -1,52 +1,48 @@
-mod cli;
-mod filesystem;
-mod utils;
+// ─────────────────────────────────────────────────────────────
+// RSfactai — Codebase Analysis Engine (CLI entry point)
+// ─────────────────────────────────────────────────────────────
+//
+// Module declarations: each corresponds to a subdirectory
+// under `src/`.
+mod cli;         // CLI argument parsing (clap)
+mod filesystem;  // File/directory scanning (stub)
+mod utils;       // Utility functions (analysis, formatting)
 
-use std::env;
 use std::process;
 
-use crate::cli::{Command, parse_args};
+use crate::cli::Command;
+use crate::cli::parse_args;
 use crate::utils::analyse;
 
 fn main() {
-    // Collect all command-line arguments into a vector.
-    let args: Vec<String> = env::args().collect();
+    // `parse_args()` calls `Cli::parse()` under the hood,
+    // which reads `std::env::args()` automatically. No more
+    // manual argument collection.
+    //
+    // If the user passes `--help`, `--version`, or invalid
+    // arguments, clap prints the message and exits the
+    // process on its own. That's why there's no error
+    // handling here — parse either returns a valid `Cli`
+    // or has already terminated.
+    let cli = parse_args();
 
-    // Validate and parse the raw arguments into a structured configuration.
-    // Exit the program if the provided arguments are invalid.
-    let command = parse_args(&args).unwrap_or_else(|err| {
-        eprintln!("Problem parsing arguments: {}", err);
-        process::exit(1);
-    });
-
-    match command {
+    // Dispatch to the appropriate handler based on the
+    // parsed subcommand.
+    match cli.command {
         Command::Analyse { path } => {
-            let contents: String = analyse(&path);
-            println!("Content:\n{}", contents);
+            match analyse(&path) {
+                Ok(contents) => println!("Content:\n{}", contents),
+                Err(err) => {
+                    eprintln!("Failed to read '{}': {}", path, err);
+                    process::exit(1);
+                }
+            }
         }
-
-        Command::Help => {
-            println!(
-                "RSfactAI - Command Line Analysis Tool (IN DEVELOPMENT)
-
-USAGE:
-    rsfactai <COMMAND> [ARGUMENTS]
-
-COMMANDS:
-    analyse, a <PATH>    Analyzes the specified file at the given path.
-    version, v           Prints version information.
-    help, h              Prints this help message.
-
-EXAMPLES:
-    rsfactai analyse poem.txt
-    rsfactai a poem.txt
-    rsfactai version
-    rsfactai v"
-            );
-        }
-
         Command::Version => {
-            println!("Version: RSfactai v0.0.1 (Beta)");
+            // `env!("CARGO_PKG_VERSION")` is replaced at compile
+            // time with the `version` field from Cargo.toml —
+            // they can never go out of sync.
+            println!("RSfactai v{}", env!("CARGO_PKG_VERSION"));
         }
     }
 }
