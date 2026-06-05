@@ -1,27 +1,47 @@
 # RSfactai
 
-**RSfactai** is a codebase analysis engine (built with Rust btw) that helps developers understand complex software systems in a fraction of the time.
+RSfactai is a codebase analysis engine written in Rust that aims to help developers understand unfamiliar software systems faster.
 
-It analyzes codebases by:
+The long-term goal is to automatically map project architecture, analyze source code, detect issues, and generate useful documentation.
 
-- Mapping the architecture (modules, dependencies, entry points)
-- Detecting issues automatically (dead code, complexity, anti-patterns)
-- Generating documentation from source analysis
-- Planning modernization strategies
+## Current Status
 
-The goal is to reduce the time required to understand large and unfamiliar projects from **weeks to hours**.
+RSfactai is currently in early development.
 
-## Status
+The project already provides:
 
-⚠️This project is in early development. Currently it reads and analyzes individual files. Directory-wide scanning and deep code parsing are coming next. ⚠️
+- Command-line interface built with Clap
+- File loading and processing pipeline
+- Progress indicators for analysis tasks
+- Modular architecture for future scanners and parsers
+
+Planned features include project-wide scanning, AST analysis, architecture mapping, documentation generation, and issue detection.
+
+---
+
+## Why RSfactai?
+
+Understanding an unfamiliar codebase can take days or even weeks.
+
+RSfactai aims to reduce that effort by automatically answering questions such as:
+
+- Where does the application start?
+- How are modules connected?
+- Which files are most important?
+- What parts of the code are unused?
+- Which areas need refactoring?
+- How can the project be modernized?
+
+---
 
 ## Installation
 
-### Prerequisites
+### Requirements
 
-- [Rust](https://rustup.rs/) (edition 2024, Rust 1.85+)
+- Rust 1.85+
+- Cargo
 
-### Install directly from GitLab
+### Install from GitLab
 
 ```bash
 cargo install --git https://gitlab.com/igbtw/RSfactai.git
@@ -35,7 +55,7 @@ cd RSfactai
 cargo install --path .
 ```
 
-Either way, the `rsfactai` binary will be placed in `~/.cargo/bin/` (make sure it's in your `PATH`).
+---
 
 ## Usage
 
@@ -50,6 +70,8 @@ rsfactai --help
 rsfactai --version
 ```
 
+---
+
 ### Commands
 
 | Command          | Description                 |
@@ -58,28 +80,51 @@ rsfactai --version
 | `help`           | Print help information      |
 | `version`        | Print version information   |
 
-## How it works
-
-```
-Source code → Scanner → Parser → Analysis → Report
-```
-
-1. **Scanner** walks the directory tree and discovers source files
-2. **Parser** builds an AST (abstract syntax tree) for each file
-3. **Analysis** applies rules to detect patterns, issues, and architecture
-4. **Report** formats the results as terminal output, JSON, or Markdown
+---
 
 ## Roadmap
 
-- [x] CLI with clap
-- [x] File reading with progress indicator
-- [ ] Directory-wide scanning (`walkdir`)
-- [ ] Rust source parsing (`syn`)
-- [ ] Multi-language support (`tree-sitter`)
-- [ ] Issue detection (dead code, complexity metrics)
-- [ ] Markdown documentation generation
-- [ ] JSON output for tooling integration
+### Core Engine
+
+- [x] CLI interface
+- [x] File loading
+- [x] Progress indicators
+- [ ] Directory scanning
+- [ ] Project discovery
+- [ ] Multi-file analysis
+
+### Rust Analysis
+
+- [ ] AST parsing with syn
+- [ ] Module dependency graph
+- [ ] Entry-point detection
+- [ ] Dead code detection
+- [ ] Complexity metrics
+
+### Reporting
+
+- [ ] Terminal reports
+- [ ] Markdown reports
+- [ ] JSON output
+- [ ] HTML reports
+
+### Future
+
+- [ ] tree-sitter integration
+- [ ] Multi-language support
+- [ ] Architecture diagrams
+- [ ] AI-assisted explanations
+
+---
 
 ## Contributing
 
-Contributions are welcome! Feel free to open issues or merge requests on [GitLab](https://gitlab.com/igbtw/RSfactai).
+Contributions, bug reports, and suggestions are welcome.
+
+Open an issue or merge request on [GitLab](https://gitlab.com/igbtw/RSfactai).
+
+---
+
+## License
+
+This project is licensed under the MIT License.
