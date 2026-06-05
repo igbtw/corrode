@@ -1,12 +1,10 @@
-// ─────────────────────────────────────────────────────────────
 // RSfactai — Codebase Analysis Engine (CLI entry point)
-// ─────────────────────────────────────────────────────────────
 //
 // Module declarations: each corresponds to a subdirectory
 // under `src/`.
-mod cli;         // CLI argument parsing (clap)
-mod filesystem;  // File/directory scanning (stub)
-mod utils;       // Utility functions (analysis, formatting)
+mod cli; // CLI argument parsing (clap)
+mod filesystem; // File/directory scanning (stub)
+mod utils; // Utility functions (analysis, formatting)
 
 use std::process;
 
@@ -29,15 +27,13 @@ fn main() {
     // Dispatch to the appropriate handler based on the
     // parsed subcommand.
     match cli.command {
-        Command::Analyse { path } => {
-            match analyse(&path) {
-                Ok(contents) => println!("Content:\n{}", contents),
-                Err(err) => {
-                    eprintln!("Failed to read '{}': {}", path, err);
-                    process::exit(1);
-                }
+        Command::Analyse { path } => match analyse(&path) {
+            Ok(contents) => println!("Content:\n{}", contents),
+            Err(err) => {
+                eprintln!("Failed to read '{}': {}", path, err);
+                process::exit(1);
             }
-        }
+        },
         Command::Version => {
             // `env!("CARGO_PKG_VERSION")` is replaced at compile
             // time with the `version` field from Cargo.toml —

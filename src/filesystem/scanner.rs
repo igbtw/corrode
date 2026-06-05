@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────
 // Filesystem scanner — walks directories to find source files
-// ─────────────────────────────────────────────────────────────
 //
 // TODO: implement recursive directory traversal to discover
 // all source files in a project (e.g. using the `walkdir` crate).
