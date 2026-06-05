@@ -1,10 +1,12 @@
 # RSfactai
 
+> ⚠️ Alpha software. APIs and output formats may change without notice.
+
 RSfactai is a codebase analysis engine written in Rust that aims to help developers understand unfamiliar software systems faster.
 
 The long-term goal is to automatically map project architecture, analyze source code, detect issues, and generate useful documentation.
 
-## Current Status
+## Development Status
 
 RSfactai is currently in early development.
 
@@ -38,8 +40,8 @@ RSfactai aims to reduce that effort by automatically answering questions such as
 
 ### Requirements
 
-- Rust 1.85+
-- Cargo
+- [Rust](https://www.rust-lang.org/tools/install) 1.85+ (Cargo included)
+- [Cargo](https://doc.rust-lang.org/cargo/)
 
 ### Install from GitLab
 

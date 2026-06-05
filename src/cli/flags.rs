@@ -28,10 +28,15 @@ use clap::{Parser, Subcommand};
 pub struct Cli {
     // `command` holds the subcommand chosen by the user.
     // `#[command(subcommand)]` tells clap: "the next argument
-    // must be one of the Command enum variants".
-    // Each variant becomes a subcommand (e.g. "analyse", "version").
+    // must be one of the Command enum variants" (if provided).
+    // Wrapping in `Option` makes the subcommand optional,
+    // allowing flags like `--license` to work alone.
     #[command(subcommand)]
-    pub command: Command,
+    pub command: Option<Command>,
+
+    /// Show license information
+    #[arg(short = 'L', long, help = "Print license information")]
+    pub license: bool,
 }
 
 // Subcommand enum
