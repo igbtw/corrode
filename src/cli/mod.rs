@@ -1,3 +1,3 @@
 mod flags;
 
-pub use flags::Flags;
+pub use flags::{Command, parse_args};
