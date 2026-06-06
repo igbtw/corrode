@@ -4,12 +4,14 @@
 // under `src/`.
 mod cli; // CLI argument parsing (clap)
 mod filesystem; // File/directory scanning (stub)
+mod models;
 mod utils; // Utility functions (analysis, formatting)
 
 use std::process;
 
 use crate::cli::Command;
 use crate::cli::parse_args;
+
 use crate::utils::analyse;
 
 fn main() {
@@ -58,12 +60,18 @@ SOFTWARE."
     // parsed subcommand.
     match cli.command {
         None => {
-            eprintln!("error: a subcommand is required");
-            eprintln!("Usage: rsfactai [OPTIONS] <COMMAND>");
+            eprintln!("error: a subcommand is required\n");
+            eprintln!("Usage: rsfactai [OPTIONS] <COMMAND>\n");
+            eprintln!("For more information, try '--help'.");
             process::exit(1);
         }
         Some(Command::Analyse { path }) => match analyse(&path) {
-            Ok(contents) => println!("Content:\n{}", contents),
+            Ok(entries) => {
+                for entry in &entries {
+                    println!("── {} ──", entry.path);
+                    println!("{}\n", entry.contents);
+                }
+            }
             Err(err) => {
                 eprintln!("Failed to read '{}': {}", path, err);
                 process::exit(1);
