@@ -3,15 +3,17 @@
 // Module declarations: each corresponds to a subdirectory
 // under `src/`.
 mod cli; // CLI argument parsing (clap)
-mod filesystem; // File/directory scanning (stub)
-mod models;
-mod utils; // Utility functions (analysis, formatting)
+mod filesystem; // File/directory scanning
+mod models; // Data types (FileEntry, AnalysisReport)
+mod output; // Output formatters (summary, future JSON/MD)
+mod utils; // Core analysis logic
 
 use std::process;
 
 use crate::cli::Command;
 use crate::cli::parse_args;
 
+use crate::output::print_summary;
 use crate::utils::analyse;
 
 fn main() {
@@ -66,12 +68,7 @@ SOFTWARE."
             process::exit(1);
         }
         Some(Command::Analyse { path }) => match analyse(&path) {
-            Ok(entries) => {
-                for entry in &entries {
-                    println!("── {} ──", entry.path);
-                    println!("{}\n", entry.contents);
-                }
-            }
+            Ok(report) => print_summary(&report),
             Err(err) => {
                 eprintln!("Failed to read '{}': {}", path, err);
                 process::exit(1);

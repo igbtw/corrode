@@ -1,4 +1,5 @@
-// Filesystem scanner — walks directories to find source files.
+// Filesystem scanner — walks directories to find source files
+// and count directory structures.
 //
 // `filter_entry` is a method on `WalkDir` that decides, for each
 // entry (file or directory), whether to descend into it.
@@ -28,4 +29,21 @@ pub fn scan_directory(path: &str) -> Vec<String> {
         .filter(|e| e.file_type().is_file())
         .map(|e| e.path().display().to_string())
         .collect()
+}
+
+/// Counts directories under `path`, following the same exclusion
+/// rules as `scan_directory` (skips SKIP_DIRS at every level).
+/// Returns 0 for single-file paths.
+pub fn count_directories(path: &str) -> usize {
+    WalkDir::new(path)
+        .into_iter()
+        .filter_entry(|e| {
+            let name = e.file_name().to_string_lossy();
+            !SKIP_DIRS.contains(&name.as_ref())
+        })
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_dir())
+        .count()
+        // Subtract 1 because the root itself is counted.
+        .saturating_sub(1)
 }
