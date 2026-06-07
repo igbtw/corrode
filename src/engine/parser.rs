@@ -1,4 +1,3 @@
-// Source code parser — parses source files into ASTs
-//
-// TODO: implement language-specific parsers (e.g. `syn` for Rust)
-// to extract modules, functions, types, dependencies, etc.
+// TODO: implement syn-based parser for Rust source files.
+// Will extract modules, functions, structs, enums, and use imports
+// from each .rs file and attach the results to AnalysisReport.

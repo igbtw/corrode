@@ -1,7 +1,4 @@
-// Utility modules — reusable helpers used across the project.
-//
-// Public API:
-//   analysis::analyse()  — the core analysis pipeline
+// Re-exports analyse() for main.rs
 
 pub mod analysis;
 

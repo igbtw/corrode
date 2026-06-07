@@ -1,15 +1,5 @@
-// ─────────────────────────────────────────────────────────────
-// RSfactai — Codebase Analysis Engine
-// Entry point
-// ─────────────────────────────────────────────────────────────
-//
-// Module declarations — each maps to a subdirectory under src/.
-//
-//   cli/        CLI argument parsing via clap derive macros
-//   filesystem/ Directory walking, file discovery, project detection
-//   models/     Data types: FileEntry, ProjectType, AnalysisReport
-//   output/     Output formatters (terminal summary, future JSON/MD)
-//   utils/      Core analysis pipeline
+// Entry point. Parses CLI, dispatches to analyse or version.
+// --license is checked before subcommand dispatch so it works without one.
 
 mod cli;
 mod filesystem;
@@ -22,17 +12,12 @@ use std::process;
 use crate::cli::Command;
 use crate::cli::parse_args;
 
-use crate::output::print_summary;
+use crate::output::{print_summary, print_tree};
 use crate::utils::analyse;
 
 fn main() {
-    // parse_args calls Cli::parse() under the hood, which reads
-    // std::env::args() automatically. If the user passes --help,
-    // --version, or invalid arguments, clap prints the message
-    // and exits the process on its own — no error handling needed.
     let cli = parse_args();
 
-    // --license is a global flag checked before subcommand dispatch.
     if cli.license {
         println!(
             "MIT License
@@ -60,7 +45,6 @@ SOFTWARE."
         return;
     }
 
-    // Dispatch to the appropriate handler based on the parsed subcommand.
     match cli.command {
         None => {
             eprintln!("error: a subcommand is required\n");
@@ -68,16 +52,21 @@ SOFTWARE."
             eprintln!("For more information, try '--help'.");
             process::exit(1);
         }
-        Some(Command::Analyse { path }) => match analyse(&path) {
-            Ok(report) => print_summary(&report),
-            Err(err) => {
-                eprintln!("Failed to read '{}': {}", path, err);
-                process::exit(1);
+        Some(Command::Analyse { path, verbose, tree }) => {
+            if tree {
+                print_tree(&path);
+            } else {
+                match analyse(&path) {
+                    Ok(report) => print_summary(&report, verbose),
+                    Err(err) => {
+                        eprintln!("Failed to read '{}': {}", path, err);
+                        process::exit(1);
+                    }
+                }
             }
-        },
+        }
         Some(Command::Version) => {
-            // env!("CARGO_PKG_VERSION") is substituted at compile time
-            // with the value from Cargo.toml — always in sync.
+            // env!("CARGO_PKG_VERSION") is resolved at compile time.
             println!("RSfactai v{}", env!("CARGO_PKG_VERSION"));
         }
     }

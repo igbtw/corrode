@@ -1,41 +1,26 @@
-// ─────────────────────────────────────────────────────────────
-// Data models
-// ─────────────────────────────────────────────────────────────
-//
-// Core types that flow through the entire analysis pipeline:
-//
-//   FileEntry        — a single source file with metadata
-//   ProjectType      — detected language/framework (enum)
-//   AnalysisReport   — the aggregated result of an analysis run
+// Core types that flow through the pipeline:
+//   FileEntry      — one file with path, contents, extension, line count, size
+//   ProjectType    — enum of known ecosystems (Rust, Node, Go, Python, Ruby)
+//   AnalysisReport — the final result of an analysis run
 
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
 
-/// A single source file discovered during scanning.
-///
-/// `contents` is preserved for future parser/analysis stages
-/// (syn, tree-sitter, …).  Several fields are unused by the
-/// terminal summary today but will be consumed by JSON output
-/// and `--verbose` mode — the `#[allow(dead_code)]` attribute
-/// suppresses false-positive compiler warnings.
+/// A source file with metadata.
+// `contents` is kept so future syn/tree-sitter parsers can
+// analyse ASTs without re-reading from disk.
 #[allow(dead_code)]
 pub struct FileEntry {
-    /// Absolute or relative path to the file.
     pub path: String,
-    /// Full text content of the file.
     pub contents: String,
-    /// File extension (lowercase, no dot), e.g. "rs", "toml".
     pub extension: String,
-    /// Number of lines in the file.
     pub line_count: usize,
-    /// File size on disk in bytes.
     pub size_bytes: u64,
 }
 
-/// Detectable project types based on manifest files found in the
-/// project root directory.  Each variant corresponds to a known
-/// language or framework ecosystem.
+/// Detected language/framework based on manifest files found
+// in the project root (Cargo.toml, package.json, etc.).
 #[derive(Debug, Clone, PartialEq)]
 pub enum ProjectType {
     Rust,
@@ -59,20 +44,16 @@ impl fmt::Display for ProjectType {
     }
 }
 
-/// The complete result of a project analysis, ready to be
-/// consumed by any output formatter (terminal summary, JSON,
-/// Markdown, …).
+// Carries all data needed by any output formatter
+// (terminal summary, JSON, Markdown, etc.).
 pub struct AnalysisReport {
-    /// Detected project type (e.g. Rust, Node, Unknown).
     pub project_type: ProjectType,
-    /// Every file that was successfully read.
+    pub entry_point: Option<String>,
     pub files: Vec<FileEntry>,
-    /// Number of directories scanned (excluding skipped ones).
     pub directory_count: usize,
-    /// Sum of `line_count` across all files.
     pub total_lines: usize,
-    /// File extension → file count  (e.g. "rs" → 8, "toml" → 2).
     pub language_map: HashMap<String, usize>,
-    /// Wall-clock duration of the analysis.
+    // Used by depth-map to compute relative depth.
+    pub project_root: String,
     pub duration: Duration,
 }
