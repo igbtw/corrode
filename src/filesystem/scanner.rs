@@ -8,22 +8,19 @@ use walkdir::WalkDir;
 
 use crate::models::ProjectType;
 
-// These directories are always skipped to avoid analysing
-// build artifacts, VCS data, or vendored dependencies.
-pub const SKIP_DIRS: &[&str] = &["target", ".git", "node_modules", ".cargo"];
+// Build artifacts, VCS data, vendored deps, generated output dirs.
+pub const SKIP_DIRS: &[&str] = &[
+    "target", ".git", "node_modules", ".cargo",
+    "dist", "build", "out", "coverage",
+    ".next", ".nuxt", "vendor", ".cache",
+];
 
-// Files with these extensions are skipped because they are
-// typically binary formats that fail UTF-8 read_to_string.
+// Binary / cache / media formats that would fail or pollute UTF-8 stats.
 pub const SKIP_EXTENSIONS: &[&str] = &[
-    "sqlite",
-    "sqlite-wal",
-    "db",
-    "cache",
-    "bin",
-    "exe",
-    "dll",
-    "so",
-    "dylib",
+    "sqlite", "sqlite-wal", "db", "cache",
+    "bin", "exe", "dll", "so", "dylib",
+    "map", "log", "pdf", "zip", "tar", "gz",
+    "jpg", "png", "svg", "ico",
 ];
 
 // Recursively walk `path`, skipping SKIP_DIRS and SKIP_EXTENSIONS.
@@ -43,7 +40,14 @@ pub fn scan_directory(path: &str) -> Vec<String> {
                 return false;
             }
             let ext = e.path().extension().and_then(|e| e.to_str()).unwrap_or("");
-            !SKIP_EXTENSIONS.contains(&ext)
+            if SKIP_EXTENSIONS.contains(&ext) {
+                return false;
+            }
+            let name = e.file_name().to_string_lossy();
+            if name.ends_with(".min.js") || name.ends_with(".min.css") {
+                return false;
+            }
+            true
         })
         .map(|e| e.path().display().to_string())
         .collect()

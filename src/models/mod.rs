@@ -56,4 +56,28 @@ pub struct AnalysisReport {
     // Used by depth-map to compute relative depth.
     pub project_root: String,
     pub duration: Duration,
+    pub file_categories: HashMap<String, usize>,
+}
+
+// Classify a file extension into a high-level category (Code, Config,
+// Documentation, Other). Used by the summary "File Categories" section.
+pub fn classify_extension(ext: &str) -> &'static str {
+    match ext {
+        "rs" | "py" | "js" | "ts" | "jsx" | "tsx" | "go" | "rb" | "java"
+        | "c" | "cpp" | "cc" | "cxx" | "h" | "hpp" | "hxx" | "cs"
+        | "swift" | "kt" | "kts" | "scala" | "clj" | "cljs" | "elm"
+        | "ex" | "exs" | "php" | "r" | "m" | "mm" | "dart"
+        | "sh" | "bash" | "zsh" | "fish" | "ps1" | "bat" | "cmd" => "Code",
+
+        "toml" | "json" | "yaml" | "yml" | "ini" | "cfg" | "conf"
+        | "env" | "editorconfig" | "gitconfig" | "gitignore"
+        | "dockerfile" | "makefile" | "cmake" | "mk"
+        | "xml" | "plist" | "pro" | "pri"
+        | "lock" => "Config",
+
+        "md" | "rst" | "txt" | "adoc" | "asciidoc"
+        | "tex" | "ltx" | "bib" => "Documentation",
+
+        _ => "Other",
+    }
 }

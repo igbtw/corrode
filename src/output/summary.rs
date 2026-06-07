@@ -2,9 +2,10 @@
 // Takes an AnalysisReport and prints:
 //   - Project type and entry point
 //   - File/dir/LOC overview
+//   - File categories (Code / Config / Documentation / Other)
 //   - Directory structure (collapsed to top-level if >15 dirs)
-//   - Language breakdown (sorted by count)
-//   - Top 3 largest files by line count
+//   - Language breakdown and raw extension counts
+//   - Top 3 largest files by line count (with size)
 //
 // In verbose mode (--verbose) also prints:
 //   - Depth map (file count per relative directory depth)
@@ -35,16 +36,29 @@ pub fn print_summary(report: &AnalysisReport, verbose: bool) {
     }
 
     print_project_overview(report);
+    print_file_categories(report);
     print_structure(report, verbose);
     if verbose {
         print_depth_map(report);
         print_size_distribution(report);
     }
     print_languages(report);
+    print_extensions(report);
     print_largest_files(report);
 
     println!();
     println!("Completed in {}", format_duration(&report.duration));
+    println!();
+}
+
+fn print_file_categories(report: &AnalysisReport) {
+    println!("File Categories");
+    let mut cats: Vec<_> = report.file_categories.iter().collect();
+    cats.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(b.0)));
+    for (cat, count) in cats {
+        let label = if *count == 1 { "File" } else { "Files" };
+        println!("  {:<22} {}", format!("{} {}", cat, label), format_number(*count));
+    }
     println!();
 }
 
@@ -174,6 +188,17 @@ fn language_name(ext: &str) -> &str {
     }
 }
 
+// Extension counts (raw names, not display names).
+fn print_extensions(report: &AnalysisReport) {
+    println!("Extensions");
+    let mut exts: Vec<_> = report.language_map.iter().collect();
+    exts.sort_by(|a, b| b.1.cmp(a.1).then_with(|| a.0.cmp(b.0)));
+    for (ext, count) in exts {
+        println!("  {:<12} {}", ext, count);
+    }
+    println!();
+}
+
 // Sorted by count descending, then name ascending. Each line
 // shows the language name + file count.
 fn print_languages(report: &AnalysisReport) {
@@ -190,7 +215,7 @@ fn print_languages(report: &AnalysisReport) {
     println!();
 }
 
-// Sorted by line count descending, top 3 shown.
+// Sorted by line count descending, top 3 shown with size.
 fn print_largest_files(report: &AnalysisReport) {
     println!("Largest Files");
 
@@ -203,7 +228,20 @@ fn print_largest_files(report: &AnalysisReport) {
             .map(|f| f.to_string_lossy())
             .unwrap_or_else(|| file.path.as_str().into());
 
-        println!("  {:<16} {}", name, file.line_count);
+        println!("  {:<16} {} lines · {}", name, format_number(file.line_count), format_bytes(file.size_bytes));
+    }
+}
+
+// Format bytes into human-readable size (B, KB, MB).
+fn format_bytes(bytes: u64) -> String {
+    const KB: f64 = 1024.0;
+    const MB: f64 = 1024.0 * 1024.0;
+    if bytes as f64 >= MB {
+        format!("{:.2} MB", bytes as f64 / MB)
+    } else if bytes as f64 >= KB {
+        format!("{:.1} KB", bytes as f64 / KB)
+    } else {
+        format!("{} B", bytes)
     }
 }
 

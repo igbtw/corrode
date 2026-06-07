@@ -16,7 +16,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use crate::filesystem::scanner::{
     count_directories, detect_entry_point, detect_project_type, scan_directory,
 };
-use crate::models::{AnalysisReport, FileEntry, ProjectType};
+use crate::models::{classify_extension, AnalysisReport, FileEntry, ProjectType};
 
 // Main entry point. If path is a directory, scans it recursively.
 // If it's a file, analyses just that file. Non-UTF-8 files are
@@ -53,6 +53,7 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
 
     let mut entries: Vec<FileEntry> = Vec::with_capacity(files.len());
     let mut language_map: HashMap<String, usize> = HashMap::new();
+    let mut file_categories: HashMap<String, usize> = HashMap::new();
 
     for file_path in &files {
         pb.set_message(format!("Reading {}...", file_path));
@@ -78,6 +79,8 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
 
         if !extension.is_empty() {
             *language_map.entry(extension.clone()).or_insert(0) += 1;
+            let category = classify_extension(&extension);
+            *file_categories.entry(category.to_string()).or_insert(0) += 1;
         }
 
         let size_bytes = fs::metadata(file_path)?.len();
@@ -108,5 +111,6 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
         language_map,
         project_root: path.to_string(),
         duration,
+        file_categories,
     })
 }
