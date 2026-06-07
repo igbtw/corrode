@@ -2,46 +2,41 @@
 
 > ⚠️ Alpha software. APIs and output formats may change without notice.
 
-RSfactai is a codebase analysis engine written in Rust that aims to help developers understand unfamiliar software systems faster.
+RSfactai is a codebase analysis engine written in Rust that helps developers understand unfamiliar software systems faster.
 
-The long-term goal is to automatically map project architecture, analyze source code, detect issues, and generate useful documentation.
+It scans a project directory and produces a clean terminal summary with file counts, language breakdown, and the largest files — all in milliseconds.
 
-## Development Status
+## Example
 
-RSfactai is currently in early development.
+```text
+$ rsfactai analyse .
 
-The project already provides:
+✓ Scanning project...
 
-- Command-line interface built with Clap
-- File loading and processing pipeline
-- Progress indicators for analysis tasks
-- Modular architecture for future scanners and parsers
+Detected      Rust Project
 
-Planned features include project-wide scanning, AST analysis, architecture mapping, documentation generation, and issue detection.
+Project      17 files · 7 dirs · 1,226 LOC
 
----
+Languages
+  Rust         11 files
+  Lock          1 file
+  Markdown      1 file
+  TOML          1 file
+  Text          1 file
 
-## Why RSfactai?
+Largest Files
+  Cargo.lock       398
+  summary.rs       134
+  README.md        132
 
-Understanding an unfamiliar codebase can take days or even weeks.
-
-RSfactai aims to reduce that effort by automatically answering questions such as:
-
-- Where does the application start?
-- How are modules connected?
-- Which files are most important?
-- What parts of the code are unused?
-- Which areas need refactoring?
-- How can the project be modernized?
-
----
+Completed in 0.451 ms
+```
 
 ## Installation
 
 ### Requirements
 
-- [Rust](https://www.rust-lang.org/tools/install) 1.85+ (Cargo included)
-- [Cargo](https://doc.rust-lang.org/cargo/)
+- [Rust](https://www.rust-lang.org/tools/install) 1.85+ (edition 2024)
 
 ### Install from GitLab
 
@@ -57,76 +52,92 @@ cd RSfactai
 cargo install --path .
 ```
 
----
-
 ## Usage
 
 ```bash
-# Analyze a file
+# Analyze a file or directory
 rsfactai analyse POEM.txt
+rsfactai analyse .
 
 # Show help
 rsfactai --help
 
 # Show version
 rsfactai --version
-```
 
----
+# Show license
+rsfactai --license
+```
 
 ### Commands
 
 | Command          | Description                 |
 | ---------------- | --------------------------- |
 | `analyse <PATH>` | Analyze a file or directory |
-| `help`           | Print help information      |
-| `version`        | Print version information   |
+| `version`        | Show version information    |
 
----
+### Flags
+
+| Flag            | Description               |
+| --------------- | ------------------------- |
+| `-h, --help`    | Print help information    |
+| `-V, --version` | Print version information |
+| `-L, --license` | Print license information |
+
+## How it works
+
+```
+Source code → Scanner → Reader → Report
+```
+
+1. **Project detection** — checks for `Cargo.toml`, `package.json`, `go.mod`, etc.
+2. **Scanner** — walks the directory tree, skipping `target/`, `.git/`, and binary extensions
+3. **Reader** — reads each file, counts lines, records extension and size
+4. **Report** — aggregates everything into a summary with language stats and largest files
+
+## Current capabilities
+
+- [x] CLI with clap (subcommands, flags, auto-generated `--help`)
+- [x] Single-file and directory analysis
+- [x] Recursive directory scanning with `walkdir`
+- [x] Smart exclusion of build artifacts (`target/`, `.git/`, etc.) and binary files
+- [x] Project type detection (Rust, Node, Go, Python, Ruby)
+- [x] Language breakdown by extension
+- [x] Largest files by line count (top 3)
+- [x] Progress spinner during analysis
+- [x] Auto-scaled timing (ms / s)
 
 ## Roadmap
 
-### Core Engine
+### Project structure & entry points
 
-- [x] CLI interface
-- [x] File loading
-- [x] Progress indicators
-- [ ] Directory scanning
-- [ ] Project discovery
-- [ ] Multi-file analysis
+- [ ] Directory tree overview (`Structure` section in report)
+- [ ] Entry point detection (`src/main.rs`, `src/lib.rs`)
 
-### Rust Analysis
+### Deep code analysis
 
-- [ ] AST parsing with syn
+- [ ] AST parsing with `syn` (Rust)
 - [ ] Module dependency graph
-- [ ] Entry-point detection
+- [ ] Function / struct / enum extraction
 - [ ] Dead code detection
 - [ ] Complexity metrics
 
-### Reporting
+### Output formats
 
-- [ ] Terminal reports
-- [ ] Markdown reports
-- [ ] JSON output
-- [ ] HTML reports
+- [ ] JSON output (`--format json`)
+- [ ] Markdown reports (`--format markdown`)
 
-### Future
+### Multi-language
 
-- [ ] tree-sitter integration
-- [ ] Multi-language support
-- [ ] Architecture diagrams
-- [ ] AI-assisted explanations
-
----
+- [ ] `tree-sitter` integration
+- [ ] Python, JavaScript, Go support
 
 ## Contributing
 
-Contributions, bug reports, and suggestions are welcome.
+Contributions, bug reports, and suggestions are so welcome.
 
 Open an issue or merge request on [GitLab](https://gitlab.com/igbtw/RSfactai).
 
----
-
 ## License
 
-This project is licensed under the MIT License.
+MIT

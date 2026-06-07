@@ -1,23 +1,45 @@
+// ─────────────────────────────────────────────────────────────
+// Terminal summary formatter
+// ─────────────────────────────────────────────────────────────
+//
+// Takes an AnalysisReport and prints a human-readable project
+// overview to stdout, including:
+//
+//   • Detected project type (if not Unknown)
+//   • Project overview (files, dirs, LOC)
+//   • Language breakdown (extension → count, sorted descending)
+//   • Largest files (top 3 by line count)
+//   • Elapsed time (auto-scaled: ms or s)
+
 use std::path::Path;
+use std::time::Duration;
 
-use crate::models::AnalysisReport;
+use crate::models::{AnalysisReport, ProjectType};
 
+/// Entry point for the terminal summary output.  Prints the
+/// complete report to stdout.
 pub fn print_summary(report: &AnalysisReport) {
     println!();
 
-    print_header(report);
+    // Show the detected project type (e.g. "Detected      Rust Project")
+    // unless the type could not be determined.
+    if report.project_type != ProjectType::Unknown {
+        println!("Detected      {} Project", report.project_type);
+        println!();
+    }
+
+    print_project_overview(report);
     print_languages(report);
     print_largest_files(report);
 
     println!();
-    println!(
-        "Completed in {:.3} ms",
-        report.duration.as_secs_f64() * 1000.0
-    );
+    println!("Completed in {}", format_duration(&report.duration));
     println!();
 }
 
-fn print_header(report: &AnalysisReport) {
+/// Prints the one-line project overview:
+///   Project      17 files · 7 dirs · 1,025 LOC
+fn print_project_overview(report: &AnalysisReport) {
     println!(
         "Project      {} files · {} dirs · {} LOC",
         report.files.len(),
@@ -27,6 +49,10 @@ fn print_header(report: &AnalysisReport) {
     println!();
 }
 
+/// Prints the language breakdown sorted by file count (descending).
+///
+/// Each line shows the friendly language name, the count, and
+/// pluralised "file" / "files".
 fn print_languages(report: &AnalysisReport) {
     println!("Languages");
 
@@ -41,6 +67,9 @@ fn print_languages(report: &AnalysisReport) {
     println!();
 }
 
+/// Prints the top 3 largest files by line count (descending).
+///
+/// Shows only the file name (not the full path) for readability.
 fn print_largest_files(report: &AnalysisReport) {
     println!("Largest Files");
 
@@ -57,6 +86,8 @@ fn print_largest_files(report: &AnalysisReport) {
     }
 }
 
+/// Maps a lowercase file extension to its human-friendly name.
+/// Unknown extensions are passed through as-is.
 fn language_name(ext: &str) -> &str {
     match ext {
         "rs" => "Rust",
@@ -70,6 +101,8 @@ fn language_name(ext: &str) -> &str {
     }
 }
 
+/// Formats an integer with thousands separators (commas).
+/// Example: 1025 → "1,025".
 fn format_number(n: usize) -> String {
     let s = n.to_string();
     let mut out = String::new();
@@ -80,4 +113,22 @@ fn format_number(n: usize) -> String {
         out.push(c);
     }
     out.chars().rev().collect()
+}
+
+/// Formats a Duration for display, automatically choosing
+/// milliseconds or seconds based on magnitude:
+///
+///   < 1 ms     → "0.410 ms"
+///   < 1 s      → "23.4 ms"
+///   otherwise  → "1.24 s"
+fn format_duration(duration: &Duration) -> String {
+    let ms = duration.as_secs_f64() * 1000.0;
+
+    if ms < 1.0 {
+        format!("{:.3} ms", ms)
+    } else if ms < 1000.0 {
+        format!("{:.1} ms", ms)
+    } else {
+        format!("{:.2} s", ms / 1000.0)
+    }
 }

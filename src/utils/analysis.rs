@@ -1,5 +1,15 @@
-// Core analysis logic — reads files, gathers metadata, and returns
-// an `AnalysisReport` ready for output formatting.
+// ─────────────────────────────────────────────────────────────
+// Core analysis pipeline
+// ─────────────────────────────────────────────────────────────
+//
+// Orchestrates the full analysis flow:
+//
+//   1. Project type detection  (check for manifest files)
+//   2. File discovery          (walkdir, skip dirs/extensions)
+//   3. Directory counting      (same exclusion rules)
+//   4. File reading            (read_to_string, metadata)
+//   5. Metrics extraction      (line count, extension, size)
+//   6. Report assembly         (AnalysisReport)
 
 use std::collections::HashMap;
 use std::fs;
@@ -8,28 +18,45 @@ use std::time::Instant;
 
 use indicatif::{ProgressBar, ProgressStyle};
 
-use crate::filesystem::scanner::{count_directories, scan_directory};
-use crate::models::{AnalysisReport, FileEntry};
+use crate::filesystem::scanner::{count_directories, detect_project_type, scan_directory};
+use crate::models::{AnalysisReport, FileEntry, ProjectType};
 
-/// Analyzes a file or directory at `path`.
+/// Analyzes a file or directory at `path` and returns an
+/// `AnalysisReport` containing all discovered files, metadata,
+/// language statistics, and timing information.
 ///
-/// - If `path` is a **file**: reads it and returns a report with a
-///   single `FileEntry`.
-/// - If `path` is a **directory**: scans recursively with `walkdir`,
-///   reads every file found, and builds a full `AnalysisReport`
-///   with counts, language map, and duration.
+/// # Behaviour
 ///
-/// Non-UTF-8 files are skipped with a warning instead of aborting.
+/// - **File path**: reads the single file and produces a report
+///   with one `FileEntry`.
+/// - **Directory path**: scans recursively with `walkdir`,
+///   skipping directories and file extensions listed in the
+///   scanner constants, reads every remaining file, and builds
+///   a full report.
+///
+/// Non-UTF-8 files are skipped with a warning instead of
+/// aborting the entire analysis.
 pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
+    // ── Progress spinner ────────────────────────────────────
     let pb = ProgressBar::new_spinner();
     pb.set_style(ProgressStyle::with_template("{spinner:.green} {msg}").unwrap());
     pb.enable_steady_tick(std::time::Duration::from_millis(100));
 
     let start = Instant::now();
 
+    // ── Determine if path is a file or directory ────────────
     let path_obj = Path::new(path);
     let is_directory = path_obj.is_dir();
 
+    // Detect project type early — cheap (just stat-ing a few
+    // well-known manifest files).
+    let project_type = if is_directory {
+        detect_project_type(path)
+    } else {
+        ProjectType::Unknown
+    };
+
+    // ── Discover files ──────────────────────────────────────
     let files: Vec<String> = if is_directory {
         pb.set_message("Scanning project...");
         scan_directory(path)
@@ -38,46 +65,55 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
         vec![path.to_string()]
     };
 
-    // Count directories with the same exclusion rules.
+    // Count directories (for the report heading).
     let directory_count = if is_directory {
         count_directories(path)
     } else {
         0
     };
 
+    // ── Read files and collect metadata ─────────────────────
     let mut entries: Vec<FileEntry> = Vec::with_capacity(files.len());
     let mut language_map: HashMap<String, usize> = HashMap::new();
 
     for file_path in &files {
         pb.set_message(format!("Reading {}...", file_path));
 
+        // read_to_string fails on binary files — skip gracefully.
         let contents = match fs::read_to_string(file_path) {
             Ok(c) => c,
             Err(_) => {
-                pb.println(format!("  ⚠ Skipping '{}' (not valid UTF-8)", file_path));
+                pb.println(format!("  Skipping '{}' (not valid UTF-8)", file_path));
                 continue;
             }
         };
 
         let line_count = contents.lines().count();
 
-        // Track language by file extension.
-        let ext = Path::new(file_path)
+        // Extract the lowercase file extension for language tracking.
+        let extension = Path::new(file_path)
             .extension()
             .and_then(|e| e.to_str())
             .unwrap_or("")
             .to_lowercase();
-        if !ext.is_empty() {
-            *language_map.entry(ext).or_insert(0) += 1;
+
+        if !extension.is_empty() {
+            *language_map.entry(extension.clone()).or_insert(0) += 1;
         }
+
+        // File size from filesystem metadata.
+        let size_bytes = fs::metadata(file_path)?.len();
 
         entries.push(FileEntry {
             path: file_path.clone(),
             contents,
+            extension,
             line_count,
+            size_bytes,
         });
     }
 
+    // ── Aggregate and return ────────────────────────────────
     let total_lines: usize = entries.iter().map(|e| e.line_count).sum();
     let duration = start.elapsed();
 
@@ -85,6 +121,7 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
     println!("✓ Scanning project...");
 
     Ok(AnalysisReport {
+        project_type,
         files: entries,
         directory_count,
         total_lines,

@@ -1,12 +1,21 @@
-// RSfactai — Codebase Analysis Engine (CLI entry point)
+// ─────────────────────────────────────────────────────────────
+// RSfactai — Codebase Analysis Engine
+// Entry point
+// ─────────────────────────────────────────────────────────────
 //
-// Module declarations: each corresponds to a subdirectory
-// under `src/`.
-mod cli; // CLI argument parsing (clap)
-mod filesystem; // File/directory scanning
-mod models; // Data types (FileEntry, AnalysisReport)
-mod output; // Output formatters (summary, future JSON/MD)
-mod utils; // Core analysis logic
+// Module declarations — each maps to a subdirectory under src/.
+//
+//   cli/        CLI argument parsing via clap derive macros
+//   filesystem/ Directory walking, file discovery, project detection
+//   models/     Data types: FileEntry, ProjectType, AnalysisReport
+//   output/     Output formatters (terminal summary, future JSON/MD)
+//   utils/      Core analysis pipeline
+
+mod cli;
+mod filesystem;
+mod models;
+mod output;
+mod utils;
 
 use std::process;
 
@@ -17,20 +26,13 @@ use crate::output::print_summary;
 use crate::utils::analyse;
 
 fn main() {
-    // `parse_args()` calls `Cli::parse()` under the hood,
-    // which reads `std::env::args()` automatically. No more
-    // manual argument collection.
-    //
-    // If the user passes `--help`, `--version`, or invalid
-    // arguments, clap prints the message and exits the
-    // process on its own. That's why there's no error
-    // handling here — parse either returns a valid `Cli`
-    // or has already terminated.
+    // parse_args calls Cli::parse() under the hood, which reads
+    // std::env::args() automatically. If the user passes --help,
+    // --version, or invalid arguments, clap prints the message
+    // and exits the process on its own — no error handling needed.
     let cli = parse_args();
 
-    // Handle global flags before dispatching to subcommands.
-    // `--license` is a flag, not a subcommand — it's checked
-    // directly on the `Cli` struct.
+    // --license is a global flag checked before subcommand dispatch.
     if cli.license {
         println!(
             "MIT License
@@ -58,8 +60,7 @@ SOFTWARE."
         return;
     }
 
-    // Dispatch to the appropriate handler based on the
-    // parsed subcommand.
+    // Dispatch to the appropriate handler based on the parsed subcommand.
     match cli.command {
         None => {
             eprintln!("error: a subcommand is required\n");
@@ -75,9 +76,8 @@ SOFTWARE."
             }
         },
         Some(Command::Version) => {
-            // `env!("CARGO_PKG_VERSION")` is replaced at compile
-            // time with the `version` field from Cargo.toml —
-            // they can never go out of sync.
+            // env!("CARGO_PKG_VERSION") is substituted at compile time
+            // with the value from Cargo.toml — always in sync.
             println!("RSfactai v{}", env!("CARGO_PKG_VERSION"));
         }
     }

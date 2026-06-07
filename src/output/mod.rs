@@ -1,7 +1,8 @@
-// Output module — format an AnalysisReport for different targets.
+// Output module — formats an AnalysisReport for different targets.
 //
-// Currently only terminal summary. JSON and Markdown formatters
-// can be added here later as sibling modules.
+// Currently only the terminal summary is implemented.  Future
+// formatters (JSON, Markdown, HTML) can be added as sibling
+// modules and re-exported here.
 
 pub mod summary;
 

@@ -1,5 +1,6 @@
-// Re-exports the CLI parsing types so they can be used
-// from `main.rs` via `crate::cli::*`.
+// CLI argument parsing — re-exports types from the flags submodule
+// so that main.rs can import them via `crate::cli::{Command, parse_args}`.
+
 mod flags;
 
 pub use flags::{Command, parse_args};
