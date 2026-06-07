@@ -1,7 +1,7 @@
 // Prints a directory tree (├── └── format) respecting the same
 // skip rules as scan_directory.
 
-use crate::filesystem::scanner::{SKIP_DIRS, SKIP_EXTENSIONS};
+use crate::filesystem::filters::{SKIP_DIRS, SKIP_EXTENSIONS};
 use walkdir::WalkDir;
 
 pub fn print_tree(path: &str) {
@@ -33,9 +33,6 @@ pub fn print_tree(path: &str) {
             stack.pop();
         }
 
-        // Scan ahead for the next entry at this depth or shallower — that
-        // determines whether this entry is the last sibling at its level.
-        // For directories this automatically skips all children.
         let next_sibling = entries[i + 1..]
             .iter()
             .position(|e| e.depth() == depth)
@@ -54,7 +51,12 @@ pub fn print_tree(path: &str) {
             name.to_string()
         };
 
-        println!("{}{}{}", prefix, if is_last { "└── " } else { "├── " }, display);
+        println!(
+            "{}{}{}",
+            prefix,
+            if is_last { "└── " } else { "├── " },
+            display
+        );
 
         if entry.file_type().is_dir() {
             stack.push((depth, is_last));

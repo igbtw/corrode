@@ -1,5 +1,6 @@
-// Output formatters: terminal summary and directory tree.
+// Output formatters: terminal summary, directory tree, and JSON.
 
+pub mod json;
 pub mod summary;
 pub mod tree;
 

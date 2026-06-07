@@ -1,6 +1,7 @@
 // Entry point. Parses CLI, dispatches to analyse or version.
 // --license is checked before subcommand dispatch so it works without one.
 
+mod analysis;
 mod cli;
 mod filesystem;
 mod models;
@@ -9,11 +10,11 @@ mod utils;
 
 use std::process;
 
+use crate::analysis::analyse;
 use crate::cli::Command;
 use crate::cli::parse_args;
 
 use crate::output::{print_summary, print_tree};
-use crate::utils::analyse;
 
 fn main() {
     let cli = parse_args();

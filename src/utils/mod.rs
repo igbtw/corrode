@@ -1,5 +1,3 @@
-// Re-exports analyse() for main.rs
+// Formatting helpers used by the output module.
 
-pub mod analysis;
-
-pub use analysis::analyse;
+pub mod formatting;

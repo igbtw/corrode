@@ -1,5 +1,8 @@
-// Re-exports for main.rs
+// CLI argument parsing and command dispatch.
+
+pub mod commands;
 
 mod flags;
 
-pub use flags::{Command, parse_args};
+pub use commands::Command;
+pub use flags::parse_args;
