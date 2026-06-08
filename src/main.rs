@@ -49,7 +49,7 @@ SOFTWARE."
     match cli.command {
         None => {
             eprintln!("error: a subcommand is required\n");
-            eprintln!("Usage: rsfactai [OPTIONS] <COMMAND>\n");
+            eprintln!("Usage: corrode [OPTIONS] <COMMAND>\n");
             eprintln!("For more information, try '--help'.");
             process::exit(1);
         }
@@ -68,7 +68,7 @@ SOFTWARE."
         }
         Some(Command::Version) => {
             // env!("CARGO_PKG_VERSION") is resolved at compile time.
-            println!("RSfactai v{}", env!("CARGO_PKG_VERSION"));
+            println!("corrode v{}", env!("CARGO_PKG_VERSION"));
         }
     }
 }

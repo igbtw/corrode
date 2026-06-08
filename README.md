@@ -1,15 +1,15 @@
-# RSfactai
+# corrode
 
 > Alpha software. APIs and output formats may change without notice.
 
-RSfactai is a codebase analysis engine written in Rust that helps developers understand unfamiliar software systems faster.
+corrode is a codebase analysis engine written in Rust that helps developers understand unfamiliar software systems faster.
 
 It scans a project directory and produces a clean terminal summary with file counts, language breakdown, largest files, and directory structure — all in milliseconds.
 
 ## Example
 
 ```text
-$ rsfactai analyse .
+$ corrode analyse .
 
 ✓ Scanning project...
 
@@ -53,14 +53,14 @@ Completed in 0.461 ms
 ### Install from GitLab
 
 ```bash
-cargo install --git https://gitlab.com/igbtw/RSfactai.git
+cargo install --git https://gitlab.com/igbtw/corrode.git
 ```
 
 ### Build from source
 
 ```bash
-git clone https://gitlab.com/igbtw/RSfactai.git
-cd RSfactai
+git clone https://gitlab.com/igbtw/corrode.git
+cd corrode
 cargo install --path .
 ```
 
@@ -68,16 +68,16 @@ cargo install --path .
 
 ```bash
 # Analyze current directory
-rsfactai analyse .
+corrode analyse .
 
 # Analyze a single file
-rsfactai analyse POEM.txt
+corrode analyse POEM.txt
 
 # Verbose mode (depth map + size distribution)
-rsfactai analyse . --verbose
+corrode analyse . --verbose
 
 # Directory tree visualization
-rsfactai analyse . --tree
+corrode analyse . --tree
 ```
 
 ### Commands
@@ -154,7 +154,7 @@ Source code → Scanner → Reader → Report
 
 Contributions, bug reports, and suggestions are very welcome.
 
-Open an issue or merge request on [GitLab](https://gitlab.com/igbtw/RSfactai).
+Open an issue or merge request on [GitLab](https://gitlab.com/igbtw/corrode).
 
 ## License
 

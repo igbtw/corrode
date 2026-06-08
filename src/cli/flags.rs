@@ -5,7 +5,7 @@ use clap::Parser;
 use crate::cli::commands::Command;
 
 #[derive(Parser)]
-#[command(name = "rsfactai", version, about = "Codebase analysis engine")]
+#[command(name = "corrode", version, about = "Codebase analysis engine")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Command>,
