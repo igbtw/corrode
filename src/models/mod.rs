@@ -1,35 +1,13 @@
-// Core types that flow through the pipeline.
-
+pub mod file;
+pub mod metrics;
+pub mod project;
+pub mod quality;
 pub mod report;
 
+pub use file::{DirectoryStat, FileEntry, FileReport, SizeDistribution};
+pub use metrics::{ArchitectureMetrics, CodeMetrics};
+pub use project::{ProjectInfo, ProjectType};
+pub use quality::{ComplexityScore, HealthScore, QualityReport, ScoreFactor};
 pub use report::{
-    AnalysisReport, ArchitectureMetrics, CodeMetrics, ComplexityReport, DirectoryStat, FileEntry,
-    Hotspot, SizeDistribution,
+    AnalysisReport, ArchitectureReport, DependencyReport, Hotspot,
 };
-
-use std::fmt;
-
-/// Detected language/framework based on manifest files found
-// in the project root (Cargo.toml, package.json, etc.).
-#[derive(Debug, Clone, PartialEq)]
-pub enum ProjectType {
-    Rust,
-    Node,
-    Go,
-    Python,
-    Ruby,
-    Unknown,
-}
-
-impl fmt::Display for ProjectType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ProjectType::Rust => write!(f, "Rust"),
-            ProjectType::Node => write!(f, "Node"),
-            ProjectType::Go => write!(f, "Go"),
-            ProjectType::Python => write!(f, "Python"),
-            ProjectType::Ruby => write!(f, "Ruby"),
-            ProjectType::Unknown => write!(f, "Unknown"),
-        }
-    }
-}

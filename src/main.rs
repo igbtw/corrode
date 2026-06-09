@@ -1,20 +1,16 @@
 // Entry point. Parses CLI, dispatches to analyse or version.
 // --license is checked before subcommand dispatch so it works without one.
 
-mod analysis;
-mod cli;
-mod filesystem;
-mod models;
-mod output;
-mod utils;
-
 use std::process;
 
-use crate::analysis::analyse;
-use crate::cli::Command;
-use crate::cli::parse_args;
+use corrode::analysis::analyse;
+use corrode::cli::Command;
+use corrode::cli::parse_args;
 
-use crate::output::{print_summary, print_tree};
+use corrode::output::{print_summary, print_tree};
+use corrode::output::renderers::json::JsonReporter;
+use corrode::output::renderers::markdown::MarkdownReporter;
+use corrode::output::reporter::ReportRenderer;
 
 fn main() {
     let cli = parse_args();
@@ -53,12 +49,27 @@ SOFTWARE."
             eprintln!("For more information, try '--help'.");
             process::exit(1);
         }
-        Some(Command::Analyse { path, verbose, tree }) => {
+        Some(Command::Analyse {
+            path,
+            verbose,
+            tree,
+            json,
+            markdown,
+        }) => {
+            // Tree mode is a quick filesystem dump — no analysis needed.
             if tree {
                 print_tree(&path);
             } else {
                 match analyse(&path) {
-                    Ok(report) => print_summary(&report, verbose),
+                    Ok(report) => {
+                        if json {
+                            JsonReporter.render(&report);
+                        } else if markdown {
+                            MarkdownReporter.render(&report);
+                        } else {
+                            print_summary(&report, verbose);
+                        }
+                    }
                     Err(err) => {
                         eprintln!("Failed to read '{}': {}", path, err);
                         process::exit(1);

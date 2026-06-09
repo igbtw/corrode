@@ -1,11 +1,10 @@
 // Dependency detection from in-memory file contents.
-// Currently supports Cargo.toml (Rust). Designed for future
-// support of package.json, pyproject.toml, go.mod, Gemfile.
+// Supports Cargo.toml (Rust) currently; the match dispatch makes it
+// straightforward to add package.json, pyproject.toml, go.mod, Gemfile.
 
 use crate::models::{FileEntry, ProjectType};
 
-// Scans already-loaded files for the project's manifest file
-// and extracts dependency names. No additional disk I/O.
+// Reads already-loaded file contents so no extra disk I/O is needed.
 pub fn detect_dependencies(files: &[FileEntry], project_type: &ProjectType) -> Vec<String> {
     match project_type {
         ProjectType::Rust => parse_cargo_deps(files),
@@ -13,11 +12,8 @@ pub fn detect_dependencies(files: &[FileEntry], project_type: &ProjectType) -> V
     }
 }
 
-// Parse [dependencies] from Cargo.toml. Simple line-by-line:
-//   - looks for [dependencies] section
-//   - stops at the next [section]
-//   - ignores comments and blank lines
-//   - extracts the crate name before '=', '{', or whitespace
+// Line-oriented Cargo.toml parser. Not a full TOML parser — just enough
+// to extract crate names from [dependencies]. Stops at the next section.
 fn parse_cargo_deps(files: &[FileEntry]) -> Vec<String> {
     let cargo = match files.iter().find(|f| f.path.ends_with("Cargo.toml")) {
         Some(f) => f,

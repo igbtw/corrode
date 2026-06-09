@@ -40,3 +40,13 @@ pub fn format_duration(duration: &Duration) -> String {
         format!("{:.2} s", ms / 1000.0)
     }
 }
+
+/// Removes leading "./" from a path; returns "(root)" for empty/dot paths.
+pub fn strip_root(dir: &str) -> String {
+    let d = dir.strip_prefix("./").unwrap_or(dir);
+    if d.is_empty() || d == "." {
+        String::from("(root)")
+    } else {
+        format!("{}/", d)
+    }
+}

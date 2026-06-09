@@ -40,5 +40,6 @@ pub fn count_directories(path: &str) -> usize {
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_dir())
         .count()
+        // Subtract the root directory itself from the count.
         .saturating_sub(1)
 }

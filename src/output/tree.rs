@@ -33,6 +33,9 @@ pub fn print_tree(path: &str) {
             stack.pop();
         }
 
+        // Scan forward for a sibling at the same depth to decide the connector
+        // (├── vs └──). WalkDir yields entries in sorted DFS order, so the next
+        // entry at the same depth is always the next sibling (or absent if last).
         let next_sibling = entries[i + 1..]
             .iter()
             .position(|e| e.depth() == depth)
@@ -40,6 +43,8 @@ pub fn print_tree(path: &str) {
             .unwrap_or(entries.len());
         let is_last = next_sibling >= entries.len();
 
+        // Build indentation from the stack: empty space for "last" entries,
+        // vertical bar for intermediate entries.
         let mut prefix = String::new();
         for (_, last) in &stack {
             prefix.push_str(if *last { "    " } else { "│   " });

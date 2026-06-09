@@ -1,12 +1,20 @@
 # corrode
 
-> Alpha software. APIs and output formats may change without notice.
+> Understand unfamiliar codebases before they rot.
 
-corrode is a codebase analysis engine written in Rust that helps developers understand unfamiliar software systems faster.
+corrode scans a project directory and produces a structured report in milliseconds: project type, entry point, dependencies, architecture metrics, hotspots, complexity score, and warning flags. It answers the questions every developer asks when opening a repository for the first time.
 
-It scans a project directory and produces a clean terminal summary with file counts, language breakdown, largest files, and directory structure — all in milliseconds.
+## Why corrode?
 
-## Example
+Codebases corrode as they age:
+
+* **Layers accumulate.** Quick fixes become permanent. The original design blurs.
+* **Knowledge leaks.** The author moves on. Documentation goes stale.
+* **Structure degrades.** Nesting deepens. Nobody knows where the entry point is.
+
+corrode gives you a clear, structured picture of a repository before you start making changes. It is the first tool you run when you clone a project, the report you attach to a PR to show architectural changes, and the CI step that catches complexity creep.
+
+## Quick example
 
 ```text
 $ corrode analyse .
@@ -14,43 +22,51 @@ $ corrode analyse .
 ✓ Scanning project...
 
 Detected      Rust Project
-
 Entry Point   src/main.rs
+Project      35 files · 8 dirs · 2,591 LOC
 
-Project      18 files · 7 dirs · 1,350 LOC
+Dependencies
+  clap          indicatif         walkdir         serde          +1 more
 
-Structure
-  (root)               6 files
-  src/output/          3 files
-  src/cli/             2 files
-  src/filesystem/      2 files
-  src/utils/           2 files
-  src/                 1 file
-  src/engine/          1 file
-  src/models/          1 file
+Largest Directories    Code Metrics
+  src/output/    679 LOC · 6 files    Code Files     29  ·  1,913 LOC
+  (root)         678 LOC · 6 files    Config Files    2  ·  473 LOC
+  src/analysis/  677 LOC · 10 files   Docs Files      2  ·  183 LOC
 
-Languages
-  Rust         12 files
-  Lock          1 file
-  Markdown      1 file
-  TOML          1 file
-  Text          1 file
+Architecture                  Hotspots
+  Max Depth          3          src/output/      35%
+  Avg LOC/File      61          src/analysis/    35%
+  Median LOC/File   37          src/models/      14%
+  Avg File Size   1.9 KB
 
-Largest Files
-  Cargo.lock       398
-  summary.rs       257
-  README.md        143
+Complexity                    Warnings
+  Score  29/100                 • Largest code file represents 14% of code LOC
+  Rating Small                  • No tests/ directory detected
 
-Completed in 0.461 ms
+Languages                     Largest Code Files
+  Rust         29 files          markdown.rs   270 lines · 10.6 KB
+  Markdown      1 file           summary.rs    241 lines ·  6.9 KB
+  TOML          1 file           report.rs     232 lines ·  6.7 KB
+
+Completed in 0.653 ms
 ```
 
+## Features
+
+* Project type and entry point detection (Rust, Node, Go, Python, Ruby)
+* Dependency extraction from Cargo.toml
+* Top-5 directories by LOC with file count
+* Code / config / docs classification with per-category LOC
+* Architecture metrics: max depth, average and median LOC/file, average file size
+* Hotspot analysis: top-level directory LOC share
+* Complexity score (0–100) with human-readable rating
+* Health warnings (large-file concentration, missing tests, deep nesting, etc.)
+* Language breakdown by extension (top 10)
+* Top-3 largest code files
+* Verbose mode: depth map + size distribution
+* Tree visualisation, Markdown export, JSON export
+
 ## Installation
-
-### Requirements
-
-- [Rust](https://www.rust-lang.org/tools/install) 1.85+ (edition 2024)
-
-### Install from GitLab
 
 ```bash
 cargo install --git https://gitlab.com/igbtw/corrode.git
@@ -64,97 +80,46 @@ cd corrode
 cargo install --path .
 ```
 
+Requires Rust 1.85+ (edition 2024).
+
 ## Usage
 
 ```bash
-# Analyze current directory
-corrode analyse .
-
-# Analyze a single file
-corrode analyse POEM.txt
-
-# Verbose mode (depth map + size distribution)
-corrode analyse . --verbose
-
-# Directory tree visualization
-corrode analyse . --tree
+corrode analyse .                         # default analysis
+corrode analyse src/main.rs               # single file
+corrode analyse . --verbose               # depth map + size buckets
+corrode analyse . --tree                  # directory tree view
+corrode analyse . --json > report.json    # machine-readable export
+corrode analyse . --markdown > report.md  # markdown report
 ```
 
-### Commands
+| Flag | Description |
+|------|-------------|
+| `-v`, `--verbose` | Show depth map and size distribution |
+| `--tree` | Print directory tree and exit |
+| `--json` | Export report as JSON |
+| `--markdown` | Export report as Markdown |
+| `-L`, `--license` | Print license information |
 
-| Command          | Description                 |
-| ---------------- | --------------------------- |
-| `analyse <PATH>` | Analyze a file or directory |
-| `version`        | Show version information    |
+`--tree`, `--json`, and `--markdown` are mutually exclusive.
 
-### Flags (analyse)
+## Why not cloc / scc?
 
-| Flag              | Description                            |
-| ----------------- | -------------------------------------- |
-| `-v, --verbose`   | Show depth map and size distribution   |
-| `--tree`          | Print a directory tree and exit        |
+cloc and scc are excellent LOC counters. corrode is not a LOC counter. It is a repository reconnaissance tool. The line counts exist only as context for the metrics that matter: architecture depth, code concentration, complexity trends, and health warnings. If you need a LOC count, use cloc. If you need to understand a project's structure before contributing to it, use corrode.
 
-### Global flags
+## Current status
 
-| Flag            | Description               |
-| --------------- | ------------------------- |
-| `-h, --help`    | Print help information    |
-| `-V, --version` | Print version information |
-| `-L, --license` | Print license information |
-
-## How it works
-
-```
-Source code → Scanner → Reader → Report
-```
-
-1. **Project detection** — checks for `Cargo.toml`, `package.json`, `go.mod`, etc.
-2. **Entry point detection** — finds `src/main.rs`, `index.js`, etc. based on project type
-3. **Scanner** — walks the directory tree, skipping `target/`, `.git/`, and binary extensions
-4. **Reader** — reads each file, counts lines, records extension and size
-5. **Report** — aggregates everything into a summary with language stats, directory structure, and largest files
-
-## Current capabilities
-
-- [x] CLI with clap (subcommands, flags, auto-generated `--help`)
-- [x] Single-file and directory analysis
-- [x] Recursive directory scanning with `walkdir`
-- [x] Smart exclusion of build artifacts (`target/`, `.git/`, etc.) and binary files
-- [x] Project type detection (Rust, Node, Go, Python, Ruby)
-- [x] Entry point detection (`src/main.rs`, `src/lib.rs`, `index.js`, etc.)
-- [x] Directory structure with collapse threshold
-- [x] Language breakdown by extension
-- [x] Largest files by line count (top 3)
-- [x] Progress spinner during analysis
-- [x] Auto-scaled timing (ms / s)
-- [x] Verbose mode (depth map + size distribution)
-- [x] Directory tree visualization (`--tree`)
+corrode is alpha software under active development. Output formats and CLI interfaces may change. The current analyser focuses on Rust and Node projects; other language backends are planned. The tool already provides useful output for any directory.
 
 ## Roadmap
 
-### Deep code analysis
-
-- [ ] AST parsing with `syn` (Rust)
-- [ ] Module dependency graph
-- [ ] Function / struct / enum extraction
-- [ ] Dead code detection
-- [ ] Complexity metrics
-
-### Output formats
-
-- [ ] JSON output (`--format json`)
-- [ ] Markdown reports (`--format markdown`)
-
-### Multi-language
-
-- [ ] `tree-sitter` integration
-- [ ] Python, JavaScript, Go support
+* **Deep Analysis** — cyclomatic complexity, dependency graphs, dead-code heuristics, churn analysis.
+* **AST Support** — Rust `syn` integration, tree-sitter backend for multi-language symbol extraction.
+* **Output Formats** — HTML reports, SARIF output for IDE integration.
 
 ## Contributing
 
-Contributions, bug reports, and suggestions are very welcome.
-
-Open an issue or merge request on [GitLab](https://gitlab.com/igbtw/corrode).
+Bug reports and feature requests are welcome at the [GitLab repository](https://gitlab.com/igbtw/corrode). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full contribution guide, and [`docs/`](docs/) for architecture and metrics documentation. Before submitting a PR, run `cargo test` and ensure zero warnings.
 
 ## License
 

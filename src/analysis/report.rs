@@ -1,14 +1,20 @@
 // Report building pipeline: orchestrates scanning, reading, and analysis.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Component, Path};
 use std::time::Instant;
 
 use indicatif::{ProgressBar, ProgressStyle};
 
-use crate::analysis::{dependencies, metrics, project};
+use crate::analysis::classification::is_code_extension;
+use crate::analysis::{
+    architecture, complexity, dependencies, health, hotspots, metrics, project, warnings,
+};
 use crate::filesystem::scanner::{count_directories, scan_directory};
-use crate::models::{AnalysisReport, FileEntry, ProjectType};
+use crate::models::{
+    AnalysisReport, ArchitectureReport, DependencyReport, FileEntry, FileReport, ProjectInfo,
+    ProjectType,
+};
 
 pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>> {
     let pb = ProgressBar::new_spinner();
@@ -20,6 +26,7 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
     let path_obj = Path::new(path);
     let is_directory = path_obj.is_dir();
 
+    // Phase 1: Detect project type from manifest files in the root.
     let project_type = if is_directory {
         project::detect_project_type(path)
     } else {
@@ -40,6 +47,7 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
         0
     };
 
+    // Phase 2: Read every file into memory (contents kept for future AST passes).
     let mut entries: Vec<FileEntry> = Vec::with_capacity(files.len());
 
     for file_path in &files {
@@ -70,6 +78,7 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
         });
     }
 
+    // Phase 3: Compute all metrics from in-memory entries.
     let language_map = metrics::build_language_map(&entries);
     let entry_point = project::detect_entry_point(&files, &project_type);
     let dependencies_list = dependencies::detect_dependencies(&entries, &project_type);
@@ -81,11 +90,13 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
     let size_distribution = metrics::compute_size_distribution(&entries);
 
     let max_depth = depth_map.last().map(|(d, _)| *d).unwrap_or(0);
-    let hotspots = metrics::compute_hotspots(&entries, path);
-    let code_entries: Vec<&FileEntry> = entries.iter().filter(|f| metrics::is_code_extension(&f.extension)).collect();
+    let hotspot_list = hotspots::compute_hotspots(&entries, path);
+    let code_entries: Vec<&FileEntry> =
+        entries.iter().filter(|f| is_code_extension(&f.extension)).collect();
     let code_total_lines: usize = code_entries.iter().map(|f| f.line_count).sum();
-    let architecture = metrics::compute_architecture(&code_entries, max_depth);
+    let arch_metrics = architecture::compute_architecture(&code_entries, max_depth);
 
+    // Largest-file-to-total-code ratio penalises monolithic files.
     let largest_code_ratio = if code_entries.len() > 1 {
         let max_lines = code_entries.iter().map(|f| f.line_count).max().unwrap_or(0);
         if code_total_lines > 0 {
@@ -97,37 +108,70 @@ pub fn analyse(path: &str) -> Result<AnalysisReport, Box<dyn std::error::Error>>
         0.0
     };
 
-    let complexity = metrics::compute_complexity(
-        code_entries.len(),
+    let warning_list = warnings::compute_warnings(&entries, max_depth);
+    let code_metrics = metrics::compute_code_metrics(&entries);
+
+    // Boolean health signals derived from file listing.
+    let has_tests = entries.iter().any(|f| {
+        Path::new(&f.path)
+            .components()
+            .any(|c| matches!(c, Component::Normal(name) if name == "tests"))
+    });
+    let has_readme = entries.iter().any(|f| {
+        Path::new(&f.path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            == Some("README.md")
+    });
+
+    let complexity_score = complexity::compute_complexity(
         code_total_lines,
         max_depth,
         directory_count,
+        &hotspot_list,
+        &size_distribution,
         largest_code_ratio,
     );
 
-    let warnings = metrics::compute_warnings(&entries, max_depth);
-    let code_metrics = metrics::compute_code_metrics(&entries);
+    let health_score = health::compute_health(
+        &warning_list,
+        &hotspot_list,
+        has_tests,
+        has_readme,
+        largest_code_ratio,
+    );
 
     pb.finish_and_clear();
-    println!("✓ Scanning project...");
+    eprintln!("✓ Scanning project...");
 
     Ok(AnalysisReport {
-        architecture,
-        code_metrics,
-        complexity,
-        dependencies: dependencies_list,
-        depth_map,
-        directory_count,
-        directory_stats,
-        duration,
-        entry_point,
-        files: entries,
-        hotspots,
-        language_map,
-        project_root: path.to_string(),
-        project_type,
-        size_distribution,
-        total_lines,
-        warnings,
+        project: ProjectInfo {
+            project_type,
+            entry_point,
+            project_root: path.to_string(),
+            duration,
+        },
+        files: FileReport {
+            entries,
+            directory_count,
+            total_lines,
+            language_map,
+            directory_stats,
+            depth_map,
+            size_distribution,
+        },
+        dependencies: DependencyReport {
+            list: dependencies_list,
+        },
+        architecture: ArchitectureReport {
+            metrics: arch_metrics,
+            hotspots: hotspot_list,
+            code_metrics,
+        },
+        quality: crate::models::QualityReport {
+            complexity: complexity_score,
+            health: health_score,
+            warnings: warning_list,
+        },
     })
 }
