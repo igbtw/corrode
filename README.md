@@ -41,7 +41,7 @@ Architecture                  Hotspots
 
 Complexity                    Warnings
   Score  29/100                 • Largest code file represents 14% of code LOC
-  Rating Small                  • No tests/ directory detected
+  Rating Moderate               • No tests/ directory detected
 
 Languages                     Largest Code Files
   Rust         29 files          markdown.rs   270 lines · 10.6 KB
@@ -59,7 +59,8 @@ Completed in 0.653 ms
 * Code / config / docs classification with per-category LOC
 * Architecture metrics: max depth, average and median LOC/file, average file size
 * Hotspot analysis: top-level directory LOC share
-* Complexity score (0–100) with human-readable rating
+* Structural complexity score (0–100) with human-readable rating — measures
+  repository size and nesting, not cyclomatic complexity
 * Health warnings (large-file concentration, missing tests, deep nesting, etc.)
 * Language breakdown by extension (top 10)
 * Top-3 largest code files

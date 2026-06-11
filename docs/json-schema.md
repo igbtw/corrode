@@ -104,6 +104,10 @@ File count by size bucket based on `line_count`.
 
 ## `dependencies`
 
+> **Suporte atual:** a extração de itens em `dependencies.items` está
+> implementada somente para projetos Rust. Para outras linguagens detectadas,
+> `count` será `0` e `items` será `[]`.
+
 ```json
 { "count": 5, "items": ["clap", "serde"] }
 ```

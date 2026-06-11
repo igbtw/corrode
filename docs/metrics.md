@@ -14,6 +14,11 @@ Heuristic string-match on file names in the project root:
 
 Entry point is the canonical main file for the detected type (e.g. `src/main.rs`, `index.js`, `main.go`).
 
+> **Extração de dependências:** atualmente implementada apenas para projetos
+> Rust (leitura de `Cargo.toml`). Para Node, Go, Python e Ruby, o campo
+> `dependencies` retorna lista vazia. Suporte a `package.json`, `go.mod`,
+> `requirements.txt` e `Gemfile` está planejado para versões futuras.
+
 ## File classification
 
 Every file is classified into one of three categories:
@@ -77,35 +82,33 @@ Sorted line counts, midpoint value. More robust than average for skewed distribu
 
 ## Complexity score
 
-A heuristic formula (not cyclomatic complexity):
+A heuristic formula (not cyclomatic complexity). Five sqrt-scaled factors
+sum to 100:
 
-```
-score = min(100,
-    (files / 20) * 25 +
-    (dirs / 10) * 15 +
-    (code_loc / 200) * 40 +
-    (depth / 3) * 20
-)
-```
+| Factor | Max pts | Formula | Saturation |
+|---|---|---|---|
+| LOC | 30 | `(sqrt(code_lines) / 200).min(1.0) × 30` | ~40 000 lines |
+| Directory Depth | 15 | `(sqrt(max_depth) / 3).min(1.0) × 15` | depth 9 |
+| Large Files | 15 | `min((sqrt(large_count) / 4).min(1.0) × 10 + min(ratio × 5, 5), 15)` | 16 files ≥500 LOC |
+| Concentration | 25 | `(top_dir_share / 100) × 25` | 100% in one dir |
+| Directories | 15 | `(sqrt(dir_count) / 10).min(1.0) × 15` | ~100 directories |
 
-Each component saturates at a "large project" threshold:
-- 400 files → max 25 points
-- 100 dirs → max 15 points
-- 40,000 code LOC → max 40 points
-- Depth 9 → max 20 points
+Score = sum of the five factors, capped at 100.
 
-Range: 0–100. Human-readable rating:
+### Ratings
 
 | Score | Rating |
 |---|---|
-| 0–20 | Tiny |
-| 21–40 | Small |
-| 41–60 | Medium |
-| 61–80 | Large |
-| 81–100 | Massive |
+| 0–20 | Low |
+| 21–40 | Moderate |
+| 41–60 | High |
+| 61–80 | Very High |
+| 81–100 | Extreme |
 
-### Why proportional weighting (not linear)
-The formula intentionally makes LOC the heaviest component (40/100) because it correlates most strongly with cognitive load. Depth is capped at 20 points — deep nesting matters, but a deep project with 10 files is less complex than a flat project with 10,000 files.
+> **Nota:** este score mede complexidade *estrutural* do repositório
+> (tamanho, profundidade de diretórios, concentração de código) — não é
+> complexidade ciclomática de McCabe, que mede branches lógicos dentro de
+> funções. Para análise ciclomática real, consulte o roadmap (AST support).
 
 ## Hotspots
 
