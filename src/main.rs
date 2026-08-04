@@ -7,10 +7,10 @@ use corrode::analysis::analyse;
 use corrode::cli::Command;
 use corrode::cli::parse_args;
 
-use corrode::output::{print_summary, print_tree};
 use corrode::output::renderers::json::JsonReporter;
 use corrode::output::renderers::markdown::MarkdownReporter;
 use corrode::output::reporter::ReportRenderer;
+use corrode::output::{print_summary, print_tree};
 
 fn main() {
     let cli = parse_args();

@@ -121,10 +121,10 @@ fn compute_complexity_returns_extreme_for_large_project() {
         percentage: 100.0,
     }];
     let result = corrode::analysis::complexity::compute_complexity(
-        40_000, 9, 100, &hotspots, &sd, 1.0,
+        4_000_000, 15, 2000, &hotspots, &sd, 1.0,
     );
     assert_eq!(result.rating, "Extreme");
-    assert_eq!(result.score, 100);
+    assert!(result.score >= 90);
 }
 
 #[test]

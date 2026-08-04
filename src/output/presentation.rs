@@ -11,6 +11,34 @@ use crate::utils::formatting::{format_duration, strip_root};
 
 // ── Display helper types ─────────────────────────────────────────────────────
 
+/// Shorten a path for terminal display by keeping the most-informative suffix.
+/// Preserves the last two path components when possible.
+/// Example: "crates/project_panel/benches/" → "project_panel/benches/"
+pub fn shorten_path(path: &str, max_len: usize) -> String {
+    if path.len() <= max_len {
+        return path.to_string();
+    }
+    // Try "…/last_two_components"
+    let parts: Vec<&str> = path.trim_end_matches('/').split('/').collect();
+    if parts.len() >= 2 {
+        let tail = format!("{}/{}", parts[parts.len() - 2], parts[parts.len() - 1]);
+        if tail.len() + 1 <= max_len {
+            return format!("…/{}", tail);
+        }
+    }
+    // Fall back to last component with …
+    if let Some(last) = parts.last() {
+        if last.len() + 2 <= max_len {
+            return format!("…/{}", last);
+        }
+    }
+    // Last resort: raw truncation
+    let mut s = path.to_string();
+    s.truncate(max_len.saturating_sub(1));
+    s.push('…');
+    s
+}
+
 pub struct DirectoryRow {
     pub path: String,
     pub loc: usize,
@@ -49,6 +77,7 @@ pub struct CodeFileRow {
     pub name: String,
     pub lines: usize,
     pub bytes: u64,
+    pub percentage: f64,
 }
 
 /// A single factor in a score breakdown, ready for rendering.
@@ -245,6 +274,7 @@ impl From<&AnalysisReport> for PresentationReport {
             .collect();
         sorted_languages.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
 
+        let total_code = report.architecture.code_metrics.code_lines;
         let top_code_files: Vec<CodeFileRow> = top_code_files(&report.files.entries, 3)
             .iter()
             .map(|f| {
@@ -256,6 +286,11 @@ impl From<&AnalysisReport> for PresentationReport {
                     name,
                     lines: f.line_count,
                     bytes: f.size_bytes,
+                    percentage: if total_code > 0 {
+                        f.line_count as f64 / total_code as f64 * 100.0
+                    } else {
+                        0.0
+                    },
                 }
             })
             .collect();

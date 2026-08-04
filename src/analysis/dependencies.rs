@@ -1,6 +1,7 @@
 // Dependency detection from in-memory file contents.
 // Supports Cargo.toml (Rust) currently; the match dispatch makes it
 // straightforward to add package.json, pyproject.toml, go.mod, Gemfile.
+// For workspace projects, aggregates dependencies across all member crates.
 
 use crate::models::{FileEntry, ProjectType};
 
@@ -14,16 +15,30 @@ pub fn detect_dependencies(files: &[FileEntry], project_type: &ProjectType) -> V
 
 // Line-oriented Cargo.toml parser. Not a full TOML parser — just enough
 // to extract crate names from [dependencies]. Stops at the next section.
+// Finds ALL Cargo.toml files to support workspace projects where
+// dependencies are in member crates rather than the root manifest.
 fn parse_cargo_deps(files: &[FileEntry]) -> Vec<String> {
-    let cargo = match files.iter().find(|f| f.path.ends_with("Cargo.toml")) {
-        Some(f) => f,
-        None => return Vec::new(),
-    };
+    let cargo_files: Vec<&FileEntry> =
+        files.iter().filter(|f| f.path.ends_with("Cargo.toml")).collect();
+    if cargo_files.is_empty() {
+        return Vec::new();
+    }
 
     let mut deps = Vec::new();
+
+    for cargo in cargo_files {
+        parse_single_cargo(&cargo.contents, &mut deps);
+    }
+
+    deps.sort();
+    deps.dedup();
+    deps
+}
+
+fn parse_single_cargo(contents: &str, deps: &mut Vec<String>) {
     let mut in_deps = false;
 
-    for line in cargo.contents.lines() {
+    for line in contents.lines() {
         let line = line.trim();
 
         if line.starts_with("[dependencies]") {
@@ -56,6 +71,4 @@ fn parse_cargo_deps(files: &[FileEntry]) -> Vec<String> {
             deps.push(name.to_string());
         }
     }
-
-    deps
 }

@@ -21,50 +21,88 @@ $ corrode analyse .
 
 ✓ Scanning project...
 
-Detected      Rust Project
-Entry Point   src/main.rs
-Project      35 files · 8 dirs · 2,591 LOC
+  Rust  Project  •  src/lib.rs
+  54 files  •  11 dirs  •  5,279 LOC  •  1.2 ms
 
-Dependencies
-  clap          indicatif         walkdir         serde          +1 more
+── Health ──────────────────────────────────────────────────────────────────────
+  Good  75/100  ███████████████░░░░░
 
-Largest Directories    Code Metrics
-  src/output/    679 LOC · 6 files    Code Files     29  ·  1,913 LOC
-  (root)         678 LOC · 6 files    Config Files    2  ·  473 LOC
-  src/analysis/  677 LOC · 10 files   Docs Files      2  ·  183 LOC
+  ✓ Tests            25/25
+  ✓ Documentation    10/10
+  ✓ Large Files      26/30
 
-Architecture                  Hotspots
-  Max Depth          3          src/output/      35%
-  Avg LOC/File      61          src/analysis/    35%
-  Median LOC/File   37          src/models/      14%
-  Avg File Size   1.9 KB
+  • Warnings          9/20
+  • Concentration     5/15
 
-Complexity                    Warnings
-  Score  29/100                 • Largest code file represents 14% of code LOC
-  Rating Moderate               • No tests/ directory detected
+── Complexity ──────────────────────────────────────────────────────────────────
+  Moderate  34/100  ███████░░░░░░░░░░░░░
 
-Languages                     Largest Code Files
-  Rust         29 files          markdown.rs   270 lines · 10.6 KB
-  Markdown      1 file           summary.rs    241 lines ·  6.9 KB
-  TOML          1 file           report.rs     232 lines ·  6.7 KB
+  LOC                16/30
+  Directory Depth     7/15
+  Large Files         2/20
+  Concentration       5/20
+  Directories         4/15
 
-Completed in 0.653 ms
+── Key Findings ────────────────────────────────────────────────────────────────
+  Largest file share ..................................................... ♦ 20%
+  Top 3 file share ....................................................... ♦ 35%
+
+── Architecture ────────────────────────────────────────────────────────────────
+  Max Depth .............................................................      3
+  Avg LOC/File ..........................................................     85
+  Median LOC ............................................................     45
+  Avg Size .............................................................. 2.7 KB
+
+── Hotspots ────────────────────────────────────────────────────────────────────
+    29% ██████████████████████████████ src/output/renderers/
+    29% ██████████████████████████████ src/analysis/
+    15% ████████████████░░░░░░░░░░░░░░ tests/
+    11% ███████████░░░░░░░░░░░░░░░░░░░ src/output/
+     8% ████████░░░░░░░░░░░░░░░░░░░░░░ src/models/
+     2% ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░ src/
+     2% ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░ src/filesystem/
+     2% ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░ src/cli/
+     1% █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ src/utils/
+     1% █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ (root)
+
+── Largest Files ───────────────────────────────────────────────────────────────
+  #1   summary.rs                     762 LOC 20.0%
+  #2   presentation.rs                323 LOC  8.5%
+  #3   markdown.rs                    274 LOC  7.2%
+
+── Languages ───────────────────────────────────────────────────────────────────
+  Rust        42 files   77.8%
+  Markdown     7 files   13.0%
+  Lock         1 file    1.9%
+  TOML         1 file    1.9%
+  Text         1 file    1.9%
+
+── Dependencies ────────────────────────────────────────────────────────────────
+  7 crates: clap, indicatif, owo-colors, serde, +3 more
+
+── Code ────────────────────────────────────────────────────────────────────────
+  Code     42 files  •  3,801 LOC
+  Config    2 files  •    483 LOC
+  Docs      8 files  •    973 LOC
+
+  Completed in  1.2 ms
 ```
 
 ## Features
 
 * Project type and entry point detection (Rust, Node, Go, Python, Ruby)
-* Dependency extraction from Cargo.toml
-* Top-5 directories by LOC with file count
+* Dependency extraction from Cargo.toml (aggregated across workspace manifests)
 * Code / config / docs classification with per-category LOC
 * Architecture metrics: max depth, average and median LOC/file, average file size
-* Hotspot analysis: top-level directory LOC share
-* Structural complexity score (0–100) with human-readable rating — measures
+* Hotspot analysis: directory LOC share with gauge bars, sorted by importance
+* Health score (0–100) with strengths / needs-attention breakdown
+* Complexity score (0–100) with human-readable rating — measures
   repository size and nesting, not cyclomatic complexity
-* Health warnings (large-file concentration, missing tests, deep nesting, etc.)
-* Language breakdown by extension (top 10)
-* Top-3 largest code files
-* Verbose mode: depth map + size distribution
+* Key findings with severity flags (♦ = caution, critical)
+* Language breakdown by extension with percentages
+* Top code files with LOC and contribution %
+* Verbose mode: depth map, size distribution, language %, file types,
+  deep directories, top files
 * Tree visualisation, Markdown export, JSON export
 
 ## Installation
@@ -96,7 +134,7 @@ corrode analyse . --markdown > report.md  # markdown report
 
 | Flag | Description |
 |------|-------------|
-| `-v`, `--verbose` | Show depth map and size distribution |
+| `-v`, `--verbose` | Append detail sections (depth map, size distribution, file types, top files) |
 | `--tree` | Print directory tree and exit |
 | `--json` | Export report as JSON |
 | `--markdown` | Export report as Markdown |

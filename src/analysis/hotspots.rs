@@ -1,6 +1,7 @@
 // Hotspot computation: groups code files by parent directory.
 // Uses LOC share rather than file count so a dir with 100 small files
 // does not appear more concentrated than one with 10 large files.
+// Shows enough directories so that "other" stays ≤ 20% of code (up to 30 entries).
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -50,12 +51,14 @@ pub fn compute_hotspots(files: &[FileEntry], project_root: &str) -> Vec<Hotspot>
 
     sorted.sort_by(|a, b| b.total_lines.cmp(&a.total_lines));
 
-    // Top 5 directories; aggregate remaining into "other" for concise output.
-    let mut hotspots: Vec<Hotspot> = Vec::with_capacity(6);
+    // Adaptive top-N: show entries until "other" < 20% or max 30 entries.
+    let max_show = 30usize;
+    let mut hotspots: Vec<Hotspot> = Vec::with_capacity(max_show + 1);
     let mut other_lines = 0usize;
+    let other_threshold = (code_total as f64 * 0.20) as usize;
 
     for (i, spot) in sorted.into_iter().enumerate() {
-        if i < 5 {
+        if i < max_show && (other_lines == 0 || other_lines >= other_threshold) {
             hotspots.push(spot);
         } else {
             other_lines += spot.total_lines;
