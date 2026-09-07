@@ -2,7 +2,7 @@
 name = "corrode"
 version = "0.2.1"
 edition = "2024"
-license = "MIT"
+license = "GPL-2.0"
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }

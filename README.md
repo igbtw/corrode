@@ -162,4 +162,4 @@ Bug reports and feature requests are welcome at the [GitLab repository](https://
 
 ## License
 
-MIT
+GPL-2.0
